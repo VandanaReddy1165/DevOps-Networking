@@ -5,9 +5,43 @@ on:
         branches: "main"
 
 jobs: 
-    deploy: 
+    echo: 
          runs-on: ubuntu-latest 
          
          steps: 
             - name: print hello world
               run: echo "Hello World ${{ github.event_name }}" 
+    
+    deploy: 
+         runs-on: ubuntu-latest
+         
+         steps: 
+            - name: checkout-code
+              uses: actions/checkout@v4
+              
+            - name: install terraform
+              run: |
+                    wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+                    echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+                    sudo apt update && sudo apt install terraform
+
+            - name: setup aws-cli
+              run: |
+                    aws configure --profile $AWS_PROFILE  set aws_access_key_id $AWS_ACCESS_KEY_ID
+                    aws configure --profile $AWS_PROFILE  set aws_secret_access_key $AWS_SECRET_ACCESS_KEY 
+                    aws configure --profile $AWS_PROFILE  set region $AWS_REGION
+                    aws configure list
+              env:
+                AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID}}
+                AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+                AWS_REGION: "us-east-1"
+                AWS_PROFILE: "vandana"
+                
+            - name: terraform initialization
+              run: terraform init    
+
+            - name: terraform plan
+              run: terraform plan  
+
+            - name: terraform apply
+              run: terraform apply  -auto-approve
