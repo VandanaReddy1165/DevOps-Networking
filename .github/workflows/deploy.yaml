@@ -1,0 +1,13 @@
+name: deploy-application
+
+on: 
+    push: 
+        branches: "main"
+
+jobs: 
+    deploy: 
+         runs-on: ubuntu-latest 
+         
+         steps: 
+            - name: print hello world
+              run: echo "Hello World ${{ github.event_name }}" 
